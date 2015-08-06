@@ -12,7 +12,7 @@ import Foundation
 class NetworkOperation {
     
     lazy var config: NSURLSessionConfiguration = NSURLSessionConfiguration.defaultSessionConfiguration()
-    lazy var session: NSURLSession = NSURLSession(configuration: self.config) // Since we're lazily loading it, we need to specify "self" keyword
+    lazy var session: NSURLSession = NSURLSession(configuration: self.config) // Since lazily loading it, need to specify "self" keyword
     let queryURL: NSURL
     
     typealias JSONDictionaryCompletion = (([String: AnyObject]?) -> Void)

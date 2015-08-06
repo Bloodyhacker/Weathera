@@ -7,26 +7,30 @@
 //
 
 import UIKit
+import CoreLocation
 
-class WeeklyTableTableViewController: UITableViewController {
+
+class WeeklyTableTableViewController: UITableViewController, CLLocationManagerDelegate{
     
     
     @IBOutlet weak var currentTemperatureLabel: UILabel?
     @IBOutlet weak var currentWeatherIcon: UIImageView?
     @IBOutlet weak var currentPrecipitationLabel: UILabel?
     @IBOutlet weak var currentTemperatureRangeLabel: UILabel?
+    @IBOutlet weak var currentLocation: UILabel?
     
     private let forecastAPIKey = "f83b784ec8ddfe45289b44500b52a62b"
-    var coordinate: (lat: Double, long: Double) = (0.0 , 0.0)
+    let locationManager: CLLocationManager = CLLocationManager()
 
-    
     var weeklyWeather: [DailyWeather] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-    
         configureView()
-        retrieveWeatherForecast()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
 
     }
     
@@ -59,7 +63,7 @@ class WeeklyTableTableViewController: UITableViewController {
     
     
     @IBAction func refreshWeather() {
-        retrieveWeatherForecast()
+        locationManager.startUpdatingLocation()
         refreshControl?.endRefreshing()
     }
     
@@ -122,15 +126,40 @@ class WeeklyTableTableViewController: UITableViewController {
         let highlightView = UIView()
         highlightView.backgroundColor = UIColor(red: 165/255.0, green: 142/255.0, blue: 203/255.0, alpha: 1.0)
         cell?.selectedBackgroundView = highlightView
+    }    
+    
+    
+    // MARK: - Location Service
+    
+    func locationManager(manager: CLLocationManager!, didUpdateLocations locations: [AnyObject]!) {
+        CLGeocoder().reverseGeocodeLocation(manager.location, completionHandler: {(placemarks, error) -> Void in
+            if (error != nil) {
+                println("Reverse geocoder failed with error" + error.localizedDescription)
+                return
+            }
+            
+            if placemarks.count > 0 {
+                let pm = placemarks[0] as! CLPlacemark
+                self.currentLocation?.text = "\(pm.locality), \(pm.administrativeArea)"
+                self.retrieveWeatherForecast(manager.location.coordinate.latitude, longitude: manager.location.coordinate.longitude)
+            } else {
+                println("Problem with the data received from geocoder")
+            }
+        })
     }
     
+    func locationManager(manager: CLLocationManager!, didFailWithError error: NSError!) {
+        println("Error while updating location \(error.localizedDescription)")
+        
+    }
+
     
     // MARK: -Weather Fetching
     
-    func retrieveWeatherForecast(){
+    func retrieveWeatherForecast(latitude: Double, longitude: Double){
         
         let forecastService = ForecastService(APIKey: forecastAPIKey)
-        forecastService.getForecast(coordinate.lat, long: coordinate.long){
+        forecastService.getForecast(latitude, long: longitude){
             (let forecast) in
             if let weatherForecast = forecast,
             let currentWeather = weatherForecast.currentWeather {
@@ -156,6 +185,7 @@ class WeeklyTableTableViewController: UITableViewController {
                     }
                     
                     self.tableView.reloadData()
+                    self.locationManager.stopUpdatingLocation()
 
                 }
             }
