@@ -19,7 +19,7 @@ class WeeklyTableTableViewController: UITableViewController, CLLocationManagerDe
     @IBOutlet weak var currentTemperatureRangeLabel: UILabel?
     @IBOutlet weak var currentLocation: UILabel?
     
-    private let forecastAPIKey = "f83b784ec8ddfe45289b44500b52a62b"
+    private var forecastAPIKey = ""
     let locationManager: CLLocationManager = CLLocationManager()
 
     var weeklyWeather: [DailyWeather] = []
@@ -27,6 +27,11 @@ class WeeklyTableTableViewController: UITableViewController, CLLocationManagerDe
     override func viewDidLoad() {
         super.viewDidLoad()
         configureView()
+        if let plistPath = NSBundle.mainBundle().pathForResource("Info", ofType: "plist"),
+            let keyItem = NSDictionary(contentsOfFile: plistPath),
+            let key = keyItem["APIKey"] as? String {
+                self.forecastAPIKey = key
+        }
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.requestAlwaysAuthorization()

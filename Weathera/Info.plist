@@ -36,5 +36,7 @@
 	</array>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>&quot;Please allow me to get your location&quot;</string>
+	<key>APIKey</key>
+	<string>f83b784ec8ddfe45289b44500b52a62b</string>
 </dict>
 </plist>
